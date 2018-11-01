@@ -7,8 +7,12 @@ TARGET = IQFileConverter
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
+HEADERS += \
+    iq_file_converter.h
+
 SOURCES += \
-        main.cpp
+    main.cpp \
+    iq_file_converter.cpp
 
 # Paths
 ROOT = $$clean_path($$PWD/..)
