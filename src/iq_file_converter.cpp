@@ -2,10 +2,7 @@
 
 #include <iostream>
 
-#include "gnss_sdr_pre_include.h"
-#include "GnssMetadata.h"
-#include "Converter.h"
-#include "gnss_sdr_post_include.h"
+#include "gnss_sdr_metadata_wrapper.h"
 
 class IQFileConverter::Pimpl
 {
@@ -38,13 +35,26 @@ void IQFileConverter::convertIQFile(const QString& inFilePath, const QString& ou
     std::cout << "File " << inFilePath.toStdString() << " was not found.";
   }
 
-  writeOutputFile();
+  GnssSdrMetadataWrapper::convertIQData(m->inputMetadata, m->outFilePath);
 
   extractSignalProperties();
   writeOutputMetadata();
 }
 
-void IQFileConverter::writeOutputFile()
+void IQFileConverter::extractSignalProperties()
+{
+  GnssMetadata::Lane lane = m->inputMetadata.Lanes().front();
+  GnssMetadata::System system = lane.Systems().front();
+  GnssMetadata::Frequency baseSampleRate = system.BaseFrequency();
+
+  GnssMetadata::IonStream stream = lane.Blocks().front().Chunks().front().Lumps().front().Streams().front();
+  m->inputSamplingRate = static_cast<double>(stream.RateFactor()) * baseSampleRate.toHertz();
+
+  GnssMetadata::Band band = stream.Bands().front();
+  m->inputCenterFrequency = band.CenterFrequency().toHertz();
+}
+
+void IQFileConverter::writeOutputMetadata()
 {
   GnssMetadata::Band channel("Channel");
   channel.CenterFrequency(GnssMetadata::Frequency(m->inputCenterFrequency, GnssMetadata::Frequency::Hz));
@@ -99,51 +109,4 @@ void IQFileConverter::writeOutputFile()
   {
     std::cout << "An error occurred while saving the xml file: " << e.what() << std::endl;
   }
-}
-
-void IQFileConverter::extractSignalProperties()
-{
-  GnssMetadata::Lane lane = m->inputMetadata.Lanes().front();
-  GnssMetadata::System system = lane.Systems().front();
-  GnssMetadata::Frequency baseSampleRate = system.BaseFrequency();
-
-  GnssMetadata::IonStream stream = lane.Blocks().front().Chunks().front().Lumps().front().Streams().front();
-  m->inputSamplingRate = static_cast<double>(stream.RateFactor()) * baseSampleRate.toHertz();
-
-  GnssMetadata::Band band = stream.Bands().front();
-  m->inputCenterFrequency = band.CenterFrequency().toHertz();
-}
-
-void IQFileConverter::writeOutputMetadata()
-{
-  // Read samples and convert them into a new IQ file
-  SampleFrontEnd sampleReader;
-  if (!sampleReader.Open<int16_t>(m->inputMetadata))
-  {
-    std::cout << "IQ binary file was not found." << std::endl;
-  }
-  sampleReader.Convert();
-
-  SampleFileSink<int16_t> sampleWriter(m->outFilePath.toStdString());
-  std::map<std::string, std::pair<const SampleSource*, const SampleStreamInfo*>> sources = sampleReader.GetSources();
-
-  for (auto it = sources.begin(); it != sources.end(); ++it)
-  {
-    std::string sourceName = it->first;
-    const SampleSource* source = sampleReader.GetSource(sourceName);
-
-    const int16_t* buffer;
-    int samplesCount = source->GetSamples(buffer);
-
-    // Write converted IQ binary data in a new file
-    for (int i = 0; i < samplesCount; i += 2)
-    {
-      sampleWriter.AddSample(buffer[i], buffer[i + 1]);
-    }
-  }
-
-  sampleWriter.Flush();
-  sampleWriter.Close();
-  sampleReader.Clear();
-  sampleReader.Close();
 }

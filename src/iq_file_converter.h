@@ -16,8 +16,6 @@ private:
     class Pimpl;
     std::unique_ptr<Pimpl> m;
 
-    void writeOutputFile();
-
     void extractSignalProperties();
     void writeOutputMetadata();
 };
