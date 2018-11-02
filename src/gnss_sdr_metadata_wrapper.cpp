@@ -12,7 +12,7 @@ GnssSdrMetadataWrapper::GnssSdrMetadataWrapper()
 GnssSdrMetadataWrapper::~GnssSdrMetadataWrapper()
 {}
 
-void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata, const QString& outFilePath)
+void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata, QString outMetadataFilePath)
 {
   // Read samples and convert them into a new IQ file
   SampleFrontEnd sampleReader;
@@ -22,7 +22,9 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
   }
   sampleReader.Convert();
 
-  SampleFileSink<int16_t> sampleWriter(outFilePath.toStdString());
+  // Convert IQ data
+  QString outDataFilePath = outMetadataFilePath.replace(".xml", ".iq");
+  SampleFileSink<int16_t> sampleWriter(outDataFilePath.toStdString());
   std::map<std::string, std::pair<const SampleSource*, const SampleStreamInfo*>> sources = sampleReader.GetSources();
 
   for (auto it = sources.begin(); it != sources.end(); ++it)
@@ -46,9 +48,9 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
   sampleReader.Close();
 }
 
-void GnssSdrMetadataWrapper::writeBinarySamples(const QString& outFilePath, char* data, int bytesCount)
+void GnssSdrMetadataWrapper::writeBinarySamples(const QString& outDataFilePath, char* data, int bytesCount)
 {
-  BinaryFileSink file(outFilePath.toStdString());
+  BinaryFileSink file(outDataFilePath.toStdString());
   file.Put(data, bytesCount);
 
   file.Flush();

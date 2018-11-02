@@ -10,7 +10,7 @@ public:
     IQFileConverter();
     ~IQFileConverter();
 
-    void convertIQFile(const QString& inFilePath, const QString& outFilePath);
+    void convertIQFile(const QString& inMetadataFilePath, const QString& outMetadataFilePath);
 
 private:
     class Pimpl;

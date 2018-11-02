@@ -1,5 +1,6 @@
 #include "iq_file_converter_test.h"
 
+#include <QFile>
 #include <QTest>
 
 #include "iq_file_converter.h"
@@ -19,8 +20,47 @@ void IQFileConverterTest::testIQFileConverter()
   writeInputMetadataFile();
 
   // Convert IQ data to ouput .iq file
-//  IQFileConverter fileConverter;
-//  fileConverter.convertIQFile("input_unit_test.xml", "output_unit_test.xml");
+  IQFileConverter fileConverter;
+  fileConverter.convertIQFile("input_unit_test.xml", "output_unit_test.xml");
+
+  // Verify that the IQ data has been writen correctly
+  QFile outputDataFile("output_unit_test.iq");
+  if (!outputDataFile.open(QIODevice::ReadOnly))
+  {
+    QFAIL("Could not open \"output_unit_test.iq\" file.");
+  }
+
+  int sampleSize = 2 * sizeof(int16_t);
+  char data[sampleSize];
+
+  for (int i = 0; i < IQ_DATA_SIZE; i++)
+  {
+    outputDataFile.read(data, sampleSize);
+
+    int16_t I;
+    *((char*) &I) = data[0];
+    *(((char*) &I) + 1) = data[1];
+
+    int16_t Q;
+    *((char*) &Q) = data[2];
+    *(((char*) &Q) + 1) = data[3];
+
+    QCOMPARE(I, m_iqData[i].I);
+    QCOMPARE(Q, m_iqData[i].Q);
+  }
+
+  // Close and delete unit test files
+  outputDataFile.close();
+  outputDataFile.remove();
+
+  QFile outputMetadataFile("output_unit_test.xml");
+  outputMetadataFile.remove();
+
+  QFile inputMetadataFile("input_unit_test.xml");
+  inputMetadataFile.remove();
+
+  QFile inputDataFile("input_unit_test.gnss");
+  inputDataFile.remove();
 }
 
 void IQFileConverterTest::generateIQData()

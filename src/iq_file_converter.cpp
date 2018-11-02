@@ -12,8 +12,8 @@ public:
   double inputSamplingRate;
   double inputCenterFrequency;
 
-  QString inFilePath;
-  QString outFilePath;
+  QString inMetadataFilePath;
+  QString outMetadataFilePath;
 };
 
 IQFileConverter::IQFileConverter()
@@ -23,19 +23,19 @@ IQFileConverter::IQFileConverter()
 IQFileConverter::~IQFileConverter()
 {}
 
-void IQFileConverter::convertIQFile(const QString& inFilePath, const QString& outFilePath)
+void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QString& outMetadataFilePath)
 {
-  m->inFilePath = inFilePath;
-  m->outFilePath = outFilePath;
+  m->inMetadataFilePath = inMetadataFilePath;
+  m->outMetadataFilePath = outMetadataFilePath;
 
   // Load input metadata
   GnssMetadata::XmlProcessor xmlProcessor;
-  if (!xmlProcessor.Load(inFilePath.toStdString().c_str(), false, m->inputMetadata))
+  if (!xmlProcessor.Load(inMetadataFilePath.toStdString().c_str(), false, m->inputMetadata))
   {
-    std::cout << "File " << inFilePath.toStdString() << " was not found.";
+    std::cout << "File " << inMetadataFilePath.toStdString() << " was not found.";
   }
 
-  GnssSdrMetadataWrapper::convertIQData(m->inputMetadata, m->outFilePath);
+  GnssSdrMetadataWrapper::convertIQData(m->inputMetadata, m->outMetadataFilePath);
 
   extractSignalProperties();
   writeOutputMetadata();
@@ -91,7 +91,9 @@ void IQFileConverter::writeOutputMetadata()
 
   // Define the file
   GnssMetadata::File file;
-  file.Url(GnssMetadata::IonString(m->outFilePath.toStdString()));
+  QString outDataFilePath = m->outMetadataFilePath;
+  outDataFilePath.replace(".xml", ".iq");
+  file.Url(GnssMetadata::IonString(outDataFilePath.toStdString()));
   file.Lane(lane, true);
 
   //Assemble the Metadata object and write XML
@@ -102,7 +104,7 @@ void IQFileConverter::writeOutputMetadata()
 
   try
   {
-    std::string metadataFilePath = m->outFilePath.toStdString() + ".xml";
+    std::string metadataFilePath = m->outMetadataFilePath.toStdString();
     xmlProcessor.Save(metadataFilePath.c_str(), metadata);
   }
   catch(GnssMetadata::ApiException& e)

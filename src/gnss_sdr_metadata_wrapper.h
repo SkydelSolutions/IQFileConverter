@@ -10,7 +10,7 @@ class GnssSdrMetadataWrapper
 public:
     ~GnssSdrMetadataWrapper();
 
-    static void convertIQData(GnssMetadata::Metadata& inputMetadata, const QString& outFilePath);
+    static void convertIQData(GnssMetadata::Metadata& inputMetadata, QString outFilePath);
     static void writeBinarySamples(const QString& outFilePath, char* data, int samplesCount);
 
 private:
