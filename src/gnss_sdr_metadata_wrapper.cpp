@@ -1,6 +1,8 @@
 #include "gnss_sdr_metadata_wrapper.h"
 
+#include <QFile>
 #include <iostream>
+#include <stdexcept>
 
 #include "gnss_sdr_pre_include.h"
 #include "Converter.h"
@@ -24,6 +26,13 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
 
   // Convert IQ data
   QString outDataFilePath = outMetadataFilePath.replace(".xml", ".iq");
+  if (QFile::exists(outDataFilePath))
+  {
+    std::string error = "File " + outDataFilePath.toStdString() + " already exists";
+    std::cout << error << std::endl;
+    throw new std::runtime_error(error);
+  }
+
   SampleFileSink<int16_t> sampleWriter(outDataFilePath.toStdString());
   std::map<std::string, std::pair<const SampleSource*, const SampleStreamInfo*>> sources = sampleReader.GetSources();
 

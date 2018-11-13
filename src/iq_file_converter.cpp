@@ -1,5 +1,6 @@
 #include "iq_file_converter.h"
 
+#include <QFileInfo>
 #include <iostream>
 #include <stdexcept>
 
@@ -28,6 +29,14 @@ void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QSt
 {
   m->inMetadataFilePath = inMetadataFilePath;
   m->outMetadataFilePath = outMetadataFilePath;
+
+  QFileInfo outMetadataFileInfo(m->outMetadataFilePath);
+  if (outMetadataFileInfo.suffix() != "xml")
+  {
+    std::string error = "Metadata output file must have a .xml extension";
+    std::cout << error << std::endl;
+    throw new std::runtime_error(error);
+  }
 
   // Load input metadata
   GnssMetadata::XmlProcessor xmlProcessor;
