@@ -1,6 +1,7 @@
 #include "iq_file_converter.h"
 
 #include <iostream>
+#include <stdexcept>
 
 #include "gnss_sdr_metadata_wrapper.h"
 
@@ -32,13 +33,86 @@ void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QSt
   GnssMetadata::XmlProcessor xmlProcessor;
   if (!xmlProcessor.Load(inMetadataFilePath.toStdString().c_str(), false, m->inputMetadata))
   {
-    std::cout << "File " << inMetadataFilePath.toStdString() << " was not found.";
+    std::string error = "File " + inMetadataFilePath.toStdString() + " was not found.";
+    std::cout << error;
+    throw new std::runtime_error(error);
+  }
+
+  if (!verifyGnssMetadata(m->inputMetadata))
+  {
+    throw new std::runtime_error("");
   }
 
   GnssSdrMetadataWrapper::convertIQData(m->inputMetadata, m->outMetadataFilePath);
 
   extractSignalProperties();
   writeOutputMetadata();
+}
+
+bool IQFileConverter::verifyGnssMetadata(const GnssMetadata::Metadata& metadata)
+{
+  if (metadata.Lanes().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 lane is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  GnssMetadata::Lane lane = metadata.Lanes().front();
+  if (lane.Systems().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 system per lane is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  if (lane.Blocks().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 block per lane is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  GnssMetadata::Block block = lane.Blocks().front();
+  if (block.Chunks().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 chunk per block is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  GnssMetadata::Chunk chunk = block.Chunks().front();
+  if (chunk.Lumps().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 lump per chunk is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  GnssMetadata::Lump lump = chunk.Lumps().front();
+  if (lump.Streams().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 stream per lump is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  GnssMetadata::IonStream stream = lump.Streams().front();
+  if (stream.Bands().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 band per stream is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  if (metadata.Files().size() > 1)
+  {
+    QString error = "GNSS Metadata with more than 1 file is not supported";
+    std::cout << error.toStdString();
+    return false;
+  }
+
+  return true;
 }
 
 void IQFileConverter::extractSignalProperties()

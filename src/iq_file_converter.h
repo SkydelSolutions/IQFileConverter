@@ -4,6 +4,8 @@
 #include <QString>
 #include <memory>
 
+#include "GnssMetadata.h"
+
 class IQFileConverter
 {
 public:
@@ -15,6 +17,8 @@ public:
 private:
     class Pimpl;
     std::unique_ptr<Pimpl> m;
+
+    bool verifyGnssMetadata(const GnssMetadata::Metadata& metadata);
 
     void extractSignalProperties();
     void writeOutputMetadata();
