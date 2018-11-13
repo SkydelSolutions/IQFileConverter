@@ -35,7 +35,7 @@ void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QSt
   {
     std::string error = "Metadata output file must have a .xml extension";
     std::cout << error << std::endl;
-    throw new std::runtime_error(error);
+    throw std::runtime_error(error);
   }
 
   // Load input metadata
@@ -44,80 +44,90 @@ void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QSt
   {
     std::string error = "File " + inMetadataFilePath.toStdString() + " was not found.";
     std::cout << error;
-    throw new std::runtime_error(error);
+    throw std::runtime_error(error);
   }
 
   if (!verifyGnssMetadata(m->inputMetadata))
   {
-    throw new std::runtime_error("");
+    std::string error = "Aborting IQ conversion";
+    std::cout << error << std::endl;
+    throw std::runtime_error(error);
   }
 
   GnssSdrMetadataWrapper::convertIQData(m->inputMetadata, m->outMetadataFilePath);
 
-  extractSignalProperties();
-  writeOutputMetadata();
+  try
+  {
+    extractSignalProperties();
+    writeOutputMetadata();
+  }
+  catch (std::runtime_error& e)
+  {
+    // Remove output IQ file
+    QString outDataFilePath = m->outMetadataFilePath;
+    outDataFilePath.replace(".xml", ".iq");
+
+    if (QFile::exists(outDataFilePath))
+    {
+      QFile::remove(outDataFilePath);
+    }
+
+    throw e;
+  }
 }
 
 bool IQFileConverter::verifyGnssMetadata(const GnssMetadata::Metadata& metadata)
 {
   if (metadata.Lanes().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 lane is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 lane is not supported";
     return false;
   }
 
   GnssMetadata::Lane lane = metadata.Lanes().front();
   if (lane.Systems().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 system per lane is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 system per lane is not supported";
     return false;
   }
 
   if (lane.Blocks().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 block per lane is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 block per lane is not supported";
     return false;
   }
 
   GnssMetadata::Block block = lane.Blocks().front();
   if (block.Chunks().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 chunk per block is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 chunk per block is not supported";
     return false;
   }
 
   GnssMetadata::Chunk chunk = block.Chunks().front();
   if (chunk.Lumps().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 lump per chunk is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 lump per chunk is not supported";
     return false;
   }
 
   GnssMetadata::Lump lump = chunk.Lumps().front();
   if (lump.Streams().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 stream per lump is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 stream per lump is not supported";
     return false;
   }
 
   GnssMetadata::IonStream stream = lump.Streams().front();
   if (stream.Bands().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 band per stream is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 band per stream is not supported";
     return false;
   }
 
   if (metadata.Files().size() > 1)
   {
-    QString error = "GNSS Metadata with more than 1 file is not supported";
-    std::cout << error.toStdString();
+    std::cout << "GNSS Metadata with more than 1 file is not supported";
     return false;
   }
 
@@ -190,8 +200,10 @@ void IQFileConverter::writeOutputMetadata()
     std::string metadataFilePath = m->outMetadataFilePath.toStdString();
     xmlProcessor.Save(metadataFilePath.c_str(), metadata);
   }
-  catch(GnssMetadata::ApiException& e)
+  catch (GnssMetadata::ApiException& /* e */)
   {
-    std::cout << "An error occurred while saving the xml file: " << e.what() << std::endl;
+    std::string error = "An error occurred while saving the output xml file";
+    std::cout << error << std::endl;
+    throw std::runtime_error(error);
   }
 }

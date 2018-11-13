@@ -30,20 +30,18 @@ void IQFileConverterTest::testIQFileConverter()
     QFAIL("Could not open \"output_unit_test.iq\" file.");
   }
 
-  int sampleSize = 2 * sizeof(int16_t);
-  char data[sampleSize];
-
+  char data[sizeof(IQ)];
   for (int i = 0; i < IQ_DATA_SIZE; i++)
   {
-    outputDataFile.read(data, sampleSize);
+    outputDataFile.read(data, sizeof(IQ));
 
     int16_t I;
-    *((char*) &I) = data[0];
-    *(((char*) &I) + 1) = data[1];
+    *(reinterpret_cast<char*>(&I)) = data[0];
+    *(reinterpret_cast<char*>(&I) + 1) = data[1];
 
     int16_t Q;
-    *((char*) &Q) = data[2];
-    *(((char*) &Q) + 1) = data[3];
+    *(reinterpret_cast<char*>(&Q)) = data[2];
+    *(reinterpret_cast<char*>(&Q) + 1) = data[3];
 
     QCOMPARE(I, m_iqData[i].I);
     QCOMPARE(Q, m_iqData[i].Q);
@@ -70,26 +68,26 @@ void IQFileConverterTest::generateIQData()
   for (int i = 0; i < IQ_DATA_SIZE; ++i)
   {
     double angle = 2.0 * M_PI * t;
-    m_iqData[i].I = (double)std::sin(angle) * (double)std::pow(2.0, 14.0);
-    m_iqData[i].Q = (double)std::cos(angle) * (double)std::pow(2.0, 14.0);
+    m_iqData[i].I = static_cast<int16_t>(std::sin(angle) * std::pow(2.0, 14.0));
+    m_iqData[i].Q = static_cast<int16_t>(std::cos(angle) * std::pow(2.0, 14.0));
 
-    t += M_PI / 2.0 / (double)IQ_DATA_SIZE;
+    t += M_PI / 2.0 / static_cast<double>(IQ_DATA_SIZE);
   }
 }
 
 void IQFileConverterTest::writeInputFile()
 {
-  int sampleSize = 2 * sizeof(int16_t);
-  int bytesCount = sampleSize * IQ_DATA_SIZE;
+  const int bytesCount = sizeof(IQ) * IQ_DATA_SIZE;
   char data[bytesCount];
+  const int sampleSize = sizeof(IQ);
 
   for (int i = 0; i < IQ_DATA_SIZE; ++i)
   {
     // Simulate big endian architecture
-    data[i * sampleSize] = *(((char*) &m_iqData[i].I) + 1);
-    data[i * sampleSize + 1] = *((char*) &m_iqData[i].I);
-    data[i * sampleSize + 2] = *(((char*) &m_iqData[i].Q) + 1);
-    data[i * sampleSize + 3] = *((char*) &m_iqData[i].Q);
+    data[i * sampleSize] = *(reinterpret_cast<char*>(&m_iqData[i].I) + 1);
+    data[i * sampleSize + 1] = *(reinterpret_cast<char*>(&m_iqData[i].I));
+    data[i * sampleSize + 2] = *(reinterpret_cast<char*>(&m_iqData[i].Q) + 1);
+    data[i * sampleSize + 3] = *(reinterpret_cast<char*>(&m_iqData[i].Q));
   }
 
   GnssSdrMetadataWrapper::writeBinarySamples("input_unit_test.gnss", data, bytesCount);

@@ -8,12 +8,6 @@
 #include "Converter.h"
 #include "gnss_sdr_post_include.h"
 
-GnssSdrMetadataWrapper::GnssSdrMetadataWrapper()
-{}
-
-GnssSdrMetadataWrapper::~GnssSdrMetadataWrapper()
-{}
-
 void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata, QString outMetadataFilePath)
 {
   // Read samples and convert them into a new IQ file
@@ -30,7 +24,7 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
   {
     std::string error = "File " + outDataFilePath.toStdString() + " already exists";
     std::cout << error << std::endl;
-    throw new std::runtime_error(error);
+    throw std::runtime_error(error);
   }
 
   SampleFileSink<int16_t> sampleWriter(outDataFilePath.toStdString());
@@ -42,10 +36,10 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
     const SampleSource* source = sampleReader.GetSource(sourceName);
 
     const int16_t* buffer;
-    int samplesCount = source->GetSamples(buffer);
+    uint32_t samplesCount = source->GetSamples(buffer);
 
     // Write converted IQ binary data in a new file
-    for (int i = 0; i < samplesCount; i += 2)
+    for (uint32_t i = 0; i < samplesCount; i += 2)
     {
       sampleWriter.AddSample(buffer[i], buffer[i + 1]);
     }
@@ -57,7 +51,7 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
   sampleReader.Close();
 }
 
-void GnssSdrMetadataWrapper::writeBinarySamples(const QString& outDataFilePath, char* data, int bytesCount)
+void GnssSdrMetadataWrapper::writeBinarySamples(const QString& outDataFilePath, char* data, uint32_t bytesCount)
 {
   BinaryFileSink file(outDataFilePath.toStdString());
   file.Put(data, bytesCount);

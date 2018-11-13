@@ -12,8 +12,15 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  IQFileConverter fileConverter;
-  fileConverter.convertIQFile(argv[1], argv[2]);
+  try
+  {
+    IQFileConverter fileConverter;
+    fileConverter.convertIQFile(argv[1], argv[2]);
+  }
+  catch (...)
+  {
+    return -1;
+  }
 
   return 0;
 }
