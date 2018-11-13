@@ -75,7 +75,7 @@ void IQFileConverter::writeOutputMetadata()
   GnssMetadata::Chunk chunk;
   chunk.SizeWord(2);
   chunk.CountWords(2);
-  chunk.Endian(GnssMetadata::Chunk::Big);
+  chunk.Endian(GnssMetadata::Chunk::Little);
   chunk.Lumps().push_back(lump);
 
   GnssMetadata::Block block(256);
