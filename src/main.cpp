@@ -25,8 +25,9 @@ int main(int argc, char* argv[])
   if (argc != 3)
   {
     std::cout << "Wrong number of arguments: Expected 2 and received " << (argc - 1) << std::endl;
-    std::cout << "  - Input metadata file path" << std::endl;
-    std::cout << "  - Output metadata file path" << std::endl;
+    std::cout << "Expected parameters are: " << std::endl;
+    std::cout << "  - IQ-File metadata respecting the GNSS SDR Metadata Standard" << std::endl;
+    std::cout << "  - IQ-File metadata usable by the Skydel SDX GNSS Simulator" << std::endl;
     return -1;
   }
 
