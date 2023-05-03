@@ -204,7 +204,7 @@ void IQFileConverter::writeOutputMetadata()
   GnssMetadata::File file;
   std::filesystem::path outDataFilePath {m->outMetadataFilePath};
   outDataFilePath.replace_extension(".iq");
-  file.Url(GnssMetadata::IonString(outDataFilePath));
+  file.Url(GnssMetadata::IonString(outDataFilePath.string()));
   file.Lane(lane, true);
 
   // Assemble the Metadata object and write XML
