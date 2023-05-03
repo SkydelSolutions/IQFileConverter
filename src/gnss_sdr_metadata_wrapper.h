@@ -19,16 +19,16 @@
 #ifndef GNSS_SDR_METADATA_WRAPPER_H
 #define GNSS_SDR_METADATA_WRAPPER_H
 
-#include <QString>
+#include <string>
 
 #include "GnssMetadata.h"
 
 namespace GnssSdrMetadataWrapper
 {
 
-void convertIQData(GnssMetadata::Metadata& inputMetadata, QString outFilePath);
-void writeBinarySamples(const QString& outFilePath, char* data, uint32_t samplesCount);
+void convertIQData(GnssMetadata::Metadata& inputMetadata, const std::string& outFilePath);
+void writeBinarySamples(const std::string& outFilePath, void* data, uint32_t samplesCount);
 
-}
+} // namespace GnssSdrMetadataWrapper
 
 #endif // GNSS_SDR_METADATA_WRAPPER_H

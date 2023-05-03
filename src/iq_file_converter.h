@@ -19,27 +19,27 @@
 #ifndef IQ_FILE_CONVERTER_H
 #define IQ_FILE_CONVERTER_H
 
-#include <QString>
 #include <memory>
+#include <string>
 
 #include "GnssMetadata.h"
 
 class IQFileConverter
 {
 public:
-    IQFileConverter();
-    ~IQFileConverter();
+  IQFileConverter();
+  ~IQFileConverter();
 
-    void convertIQFile(const QString& inMetadataFilePath, const QString& outMetadataFilePath);
+  void convertIQFile(const std::string& inMetadataFilePath, const std::string& outMetadataFilePath);
 
 private:
-    class Pimpl;
-    std::unique_ptr<Pimpl> m;
+  class Pimpl;
+  std::unique_ptr<Pimpl> m;
 
-    bool verifyGnssMetadata(const GnssMetadata::Metadata& metadata);
+  bool verifyGnssMetadata(const GnssMetadata::Metadata& metadata);
 
-    void extractSignalProperties();
-    void writeOutputMetadata();
+  void extractSignalProperties();
+  void writeOutputMetadata();
 };
 
 #endif // IQ_FILE_CONVERTER_H

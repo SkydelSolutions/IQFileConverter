@@ -1,0 +1,6 @@
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+add_executable(IQFileConverter main.cpp iq_file_converter.cpp gnss_sdr_metadata_wrapper.cpp)
+include_directories(GNSS-Metadata-Standard/api/inc GNSS-Metadata-Standard/converter/inc)
+add_subdirectory(GNSS-Metadata-Standard)
+target_link_libraries(IQFileConverter api xml cnv)
