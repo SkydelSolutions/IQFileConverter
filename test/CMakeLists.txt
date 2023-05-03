@@ -1,0 +1,3 @@
+add_executable(IQFileConverterTest iq_file_converter_test.cpp)
+target_include_directories(IQFileConverterTest PRIVATE IQFileConverterLib)
+target_link_libraries(IQFileConverterTest IQFileConverterLib api xml cnv)
