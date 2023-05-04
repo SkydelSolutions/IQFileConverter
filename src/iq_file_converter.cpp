@@ -18,7 +18,7 @@
 
 #include "iq_file_converter.h"
 
-#include <QFileInfo>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 
@@ -32,24 +32,24 @@ public:
   double inputSamplingRate;
   double inputCenterFrequency;
 
-  QString inMetadataFilePath;
-  QString outMetadataFilePath;
+  std::string inMetadataFilePath;
+  std::string outMetadataFilePath;
 };
 
-IQFileConverter::IQFileConverter()
-    : m(new Pimpl())
-{}
+IQFileConverter::IQFileConverter() : m(new Pimpl())
+{
+}
 
 IQFileConverter::~IQFileConverter()
-{}
+{
+}
 
-void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QString& outMetadataFilePath)
+void IQFileConverter::convertIQFile(const std::string& inMetadataFilePath, const std::string& outMetadataFilePath)
 {
   m->inMetadataFilePath = inMetadataFilePath;
   m->outMetadataFilePath = outMetadataFilePath;
 
-  QFileInfo outMetadataFileInfo(m->outMetadataFilePath);
-  if (outMetadataFileInfo.suffix() != "xml")
+  if (std::filesystem::path(m->outMetadataFilePath).extension() != ".xml")
   {
     std::string error = "Metadata output file must have a .xml extension";
     std::cout << error << std::endl;
@@ -58,9 +58,9 @@ void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QSt
 
   // Load input metadata
   GnssMetadata::XmlProcessor xmlProcessor;
-  if (!xmlProcessor.Load(inMetadataFilePath.toStdString().c_str(), false, m->inputMetadata))
+  if (!xmlProcessor.Load(inMetadataFilePath.c_str(), false, m->inputMetadata))
   {
-    std::string error = "File " + inMetadataFilePath.toStdString() + " was not found.";
+    std::string error = "File " + inMetadataFilePath + " was not found.";
     std::cout << error;
     throw std::runtime_error(error);
   }
@@ -82,12 +82,12 @@ void IQFileConverter::convertIQFile(const QString& inMetadataFilePath, const QSt
   catch (std::runtime_error& e)
   {
     // Remove output IQ file
-    QString outDataFilePath = m->outMetadataFilePath;
-    outDataFilePath.replace(".xml", ".iq");
+    std::filesystem::path outDataFilePath {m->outMetadataFilePath};
+    outDataFilePath.replace_extension(".iq");
 
-    if (QFile::exists(outDataFilePath))
+    if (std::filesystem::exists(outDataFilePath))
     {
-      QFile::remove(outDataFilePath);
+      std::filesystem::remove(outDataFilePath);
     }
 
     throw e;
@@ -202,12 +202,12 @@ void IQFileConverter::writeOutputMetadata()
 
   // Define the file
   GnssMetadata::File file;
-  QString outDataFilePath = m->outMetadataFilePath;
-  outDataFilePath.replace(".xml", ".iq");
-  file.Url(GnssMetadata::IonString(outDataFilePath.toStdString()));
+  std::filesystem::path outDataFilePath {m->outMetadataFilePath};
+  outDataFilePath.replace_extension(".iq");
+  file.Url(GnssMetadata::IonString(outDataFilePath.string()));
   file.Lane(lane, true);
 
-  //Assemble the Metadata object and write XML
+  // Assemble the Metadata object and write XML
   GnssMetadata::Metadata metadata;
   GnssMetadata::XmlProcessor xmlProcessor;
   metadata.Lanes().push_back(lane);
@@ -215,8 +215,7 @@ void IQFileConverter::writeOutputMetadata()
 
   try
   {
-    std::string metadataFilePath = m->outMetadataFilePath.toStdString();
-    xmlProcessor.Save(metadataFilePath.c_str(), metadata);
+    xmlProcessor.Save(m->outMetadataFilePath.c_str(), metadata);
   }
   catch (GnssMetadata::ApiException& /* e */)
   {

@@ -19,31 +19,29 @@
 #ifndef IQ_FILE_CONVERTER_TEST_H
 #define IQ_FILE_CONVERTER_TEST_H
 
-#include <QObject>
+#include <cstdint>
 
-class IQFileConverterTest : public QObject
+class IQFileConverterTest
 {
-  Q_OBJECT
 
 public:
-    IQFileConverterTest();
-    ~IQFileConverterTest();
-
-private slots:
-    void testIQFileConverter();
+  IQFileConverterTest();
+  ~IQFileConverterTest();
+  void testIQFileConverter();
 
 private:
-    struct IQ {
-      int16_t I;
-      int16_t Q;
-    };
+  struct IQ
+  {
+    int16_t I;
+    int16_t Q;
+  };
 
-    static const int IQ_DATA_SIZE = 25000;
-    IQ m_iqData[IQ_DATA_SIZE];
+  static const int IQ_DATA_SIZE = 25000;
+  IQ m_iqData[IQ_DATA_SIZE];
 
-    void generateIQData();
-    void writeInputFile();
-    void writeInputMetadataFile();
+  void generateIQData();
+  void writeInputFile();
+  void writeInputMetadataFile();
 };
 
 #endif // IQ_FILE_CONVERTER_TEST_H

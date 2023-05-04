@@ -18,15 +18,14 @@
 
 #include "gnss_sdr_metadata_wrapper.h"
 
-#include <QFile>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 
-#include "gnss_sdr_pre_include.h"
 #include "Converter.h"
-#include "gnss_sdr_post_include.h"
 
-void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata, QString outMetadataFilePath)
+void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata,
+                                           const std::string& outMetadataFilePath)
 {
   // Read samples and convert them into a new IQ file
   SampleFrontEnd sampleReader;
@@ -37,15 +36,16 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
   sampleReader.Convert();
 
   // Convert IQ data
-  QString outDataFilePath = outMetadataFilePath.replace(".xml", ".iq");
-  if (QFile::exists(outDataFilePath))
+  std::filesystem::path outDataFilePath {outMetadataFilePath};
+  outDataFilePath.replace_extension(".iq");
+  if (std::filesystem::exists(outDataFilePath))
   {
-    std::string error = "File " + outDataFilePath.toStdString() + " already exists";
+    std::string error = "File " + outDataFilePath.string() + " already exists";
     std::cout << error << std::endl;
     throw std::runtime_error(error);
   }
 
-  SampleFileSink<int16_t> sampleWriter(outDataFilePath.toStdString());
+  SampleFileSink<int16_t> sampleWriter(outDataFilePath.string());
   std::map<std::string, std::pair<const SampleSource*, const SampleStreamInfo*>> sources = sampleReader.GetSources();
 
   for (auto it = sources.begin(); it != sources.end(); ++it)
@@ -69,9 +69,9 @@ void GnssSdrMetadataWrapper::convertIQData(GnssMetadata::Metadata& inputMetadata
   sampleReader.Close();
 }
 
-void GnssSdrMetadataWrapper::writeBinarySamples(const QString& outDataFilePath, char* data, uint32_t bytesCount)
+void GnssSdrMetadataWrapper::writeBinarySamples(const std::string& outDataFilePath, void* data, uint32_t bytesCount)
 {
-  BinaryFileSink file(outDataFilePath.toStdString());
+  BinaryFileSink file(outDataFilePath);
   file.Put(data, bytesCount);
 
   file.Flush();

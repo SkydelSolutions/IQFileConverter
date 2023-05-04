@@ -18,17 +18,22 @@
 
 #include "iq_file_converter_test.h"
 
-#include <QFile>
-#include <QTest>
+#include <cmath>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
-#include "iq_file_converter.h"
 #include "gnss_sdr_metadata_wrapper.h"
+#include "iq_file_converter.h"
 
 IQFileConverterTest::IQFileConverterTest()
-{}
+{
+}
 
 IQFileConverterTest::~IQFileConverterTest()
-{}
+{
+}
 
 void IQFileConverterTest::testIQFileConverter()
 {
@@ -42,10 +47,12 @@ void IQFileConverterTest::testIQFileConverter()
   fileConverter.convertIQFile("input_unit_test.xml", "output_unit_test.xml");
 
   // Verify that the IQ data has been writen correctly
-  QFile outputDataFile("output_unit_test.iq");
-  if (!outputDataFile.open(QIODevice::ReadOnly))
+  const std::string outputDataPath {"output_unit_test.iq"};
+  std::ifstream outputDataFile(outputDataPath);
+  if (!outputDataFile.is_open())
   {
-    QFAIL("Could not open \"output_unit_test.iq\" file.");
+    std::cerr << "Could not open \"output_unit_test.iq\" file." << std::endl;
+    std::abort();
   }
 
   char data[sizeof(IQ)];
@@ -61,22 +68,27 @@ void IQFileConverterTest::testIQFileConverter()
     *(reinterpret_cast<char*>(&Q)) = data[2];
     *(reinterpret_cast<char*>(&Q) + 1) = data[3];
 
-    QCOMPARE(I, m_iqData[i].I);
-    QCOMPARE(Q, m_iqData[i].Q);
+    if (I != m_iqData[i].I)
+    {
+      std::cerr << "I != m_iqData[" << i << "].I: " << I << " != " << m_iqData[i].I << std::endl;
+      std::abort();
+    }
+    if (Q != m_iqData[i].Q)
+    {
+      std::cerr << "Q != m_iqData[" << i << "].Q: " << Q << " != " << m_iqData[i].Q << std::endl;
+      std::abort();
+    }
   }
 
   // Close and delete unit test files
   outputDataFile.close();
-  outputDataFile.remove();
+  std::filesystem::remove(outputDataPath);
 
-  QFile outputMetadataFile("output_unit_test.xml");
-  outputMetadataFile.remove();
+  std::filesystem::remove("output_unit_test.xml");
 
-  QFile inputMetadataFile("input_unit_test.xml");
-  inputMetadataFile.remove();
+  std::filesystem::remove("input_unit_test.xml");
 
-  QFile inputDataFile("input_unit_test.gnss");
-  inputDataFile.remove();
+  std::filesystem::remove("input_unit_test.gnss");
 }
 
 void IQFileConverterTest::generateIQData()
@@ -152,7 +164,7 @@ void IQFileConverterTest::writeInputMetadataFile()
   file.Url(GnssMetadata::IonString("input_unit_test.gnss"));
   file.Lane(lane, true);
 
-  //Assemble the Metadata object and write XML
+  // Assemble the Metadata object and write XML
   GnssMetadata::Metadata metadata;
   GnssMetadata::XmlProcessor xmlProcessor;
   metadata.Lanes().push_back(lane);
@@ -162,11 +174,16 @@ void IQFileConverterTest::writeInputMetadataFile()
   {
     xmlProcessor.Save("input_unit_test.xml", metadata);
   }
-  catch(GnssMetadata::ApiException& e)
+  catch (GnssMetadata::ApiException& e)
   {
-    std::string error = std::string("An error occurred while saving the input_unit_test.xml file: ") + e.what();
-    QFAIL(error.c_str());
+    std::cerr << "An error occurred while saving the input_unit_test.xml file: " << e.what() << std::endl;
+    std::abort();
   }
 }
 
-QTEST_APPLESS_MAIN(IQFileConverterTest)
+int main()
+{
+  IQFileConverterTest test;
+  test.testIQFileConverter();
+  return EXIT_SUCCESS;
+}
